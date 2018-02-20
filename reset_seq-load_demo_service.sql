@@ -16,7 +16,7 @@ INSERT INTO news_message (messaggio, icona_iniziale, data_validita, data_scadenz
 VALUES ('Tieni sempre sotto controllo le novita'' del WebGIS!!', 'common/icons/toolbar_icons/news.png', '2015-12-01', NULL, NULL);
 
 INSERT INTO webgis_ol_layers (openlayer_name, db_table_view_name, service, layer_description, theme_description, ol_cluster_enabled, store_definition, column_definition, filter_defined, filter_description, mobile_friendly, geom_type, geom_srid, grid_title)
-VALUES ('rete_meteoidro_tiny', 'iris_base.dati_di_base.rete_meteoidrografica', 'tinyows', 'stazioni meteo RUPAR area piemontese e limitrofe', 'stile secondo tipo stazione campo meteo_tab', false, 'store_meteoidro_tiny', 'columns_meteoidro', false, NULL, false, 'POINT', 23032, 'Anagrafica stazioni rete a terra (double-click to zoom on interested station)');
+VALUES ('rete_meteoidro', 'iris_base.dati_di_base.rete_meteoidrografica', 'mapserver', 'stazioni meteo RUPAR area piemontese e limitrofe', 'stile secondo tipo stazione campo meteo_tab', false, 'store_meteoidro', 'columns_meteoidro', false, NULL, false, 'POINT', 23032, 'Anagrafica stazioni rete a terra (double-click to zoom on interested station)');
 
 INSERT INTO webgis_ol_layers (openlayer_name, db_table_view_name, service, layer_description, theme_description, ol_cluster_enabled, store_definition, column_definition, filter_defined, filter_description, mobile_friendly, geom_type, geom_srid, grid_title)
 VALUES ('temperatura_tiny','iris_base.realtime.v_last_terma','tinyows','Dati termometrici - ultimo valore','stile secondo il campo ultimovalore, con etichetta nel cerchio',true,NULL,NULL,false,NULL,true,'POINT',23032,NULL);
