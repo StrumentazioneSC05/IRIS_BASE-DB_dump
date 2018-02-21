@@ -1,0 +1,68 @@
+<tinyows online_resource="http://localhost/cgi-bin/tinyows"
+	schema_dir="/usr/local/share/tinyows/schema/"
+	log="/tmp/tinyows.log"
+	log_level="1"
+>
+
+  <pg host="localhost" user="webgis" password="webgis$2013%" dbname="iris_base" port="5432"/>
+
+  <metadata name="TinyOWS Server" title="TinyOWS Server - Demo Service" />
+
+  <layer retrievable="1"
+         queryable="0"
+         writable="0"
+         ns_prefix="tows"
+         ns_uri="http://www.tinyows.org/"
+         schema="dati_di_base"
+         name="rete_meteoidrografica"
+         title="rete_meteoidrografica"
+         srid="900913,3785,32632,23032"
+         abstract="Rete meteoidrografica del Piemonte"
+  />
+
+  <layer retrievable="1"
+         ns_prefix="tows"
+         ns_uri="http://www.tinyows.org/"
+         srid="900913,3785,32632,23032"
+         schema="realtime"
+         name="v_last_terma"
+         title="v_last_terma"
+         abstract="Dati termometrici - ultimo valore"
+         pkey="gid"
+  />
+
+  <layer retrievable="1"
+         ns_prefix="tows"
+         ns_uri="http://www.tinyows.org/"
+         srid="900913,3785,32632,23032"
+         schema="realtime"
+         name="v_last_vento"
+         title="v_last_vento"
+         abstract="Dati anemometrici - ultimo valore"
+         pkey="gid"
+  />
+
+  <layer retrievable="1"
+         ns_prefix="tows"
+         ns_uri="http://www.tinyows.org/"
+         srid="900913,3785,32632,23032"
+         schema="realtime"
+         name="v_last_nivo"
+         title="v_last_nivo"
+         abstract="Dati neve fresca dalle 8"
+         pkey="gid"
+  />
+
+  <layer retrievable="1"
+         ns_prefix="tows"
+         ns_uri="http://www.tinyows.org/"
+         srid="900913,3785,32632,23032,3875"
+         schema="realtime"
+         name="v_last_pluv"
+         title="v_last_pluv"
+         abstract="Piogge ultime 3h"
+         pkey="gid"
+  />
+
+</tinyows>
+
