@@ -500,6 +500,8 @@ Then load the dump files and demo data:
 
 /usr/pgsql-9.3/bin/psql -U postgres -d iris_base -c "\copy realtime.meteo_real_time FROM '/home/iris_user/dati_realtime_demo-v3x.csv';"
 
+/usr/pgsql-9.3/bin/psql -U postgres -d iris_base -f /home/iris_user/dump_limiti_amministrativi_2016.sql > error_restore_limiti_ammvi.log 2>&1
+
 Create some core functions and triggers:
 /usr/pgsql-9.3/bin/psql -d iris_base -h localhost -U postgres -p 5432 -f /home/iris_user/create_functions_and_triggers.sql > error_functions_triggers-v3x.log 2>&1
 
