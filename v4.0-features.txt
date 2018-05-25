@@ -1,0 +1,7 @@
+Aggiornamenti dalla versione 3.0 alla 4.0:
+
+- funzioni extra al clic su mappa: report evento, query WMS locale
+- raggruppamento funzioni su mappa in un unico menu ad icona
+- accesso ai servizi tramite httpd e DB postgres
+- ...
+

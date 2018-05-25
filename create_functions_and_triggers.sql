@@ -264,23 +264,4 @@ GRANT EXECUTE ON FUNCTION public.zradar_at(real, real, real) TO postgres;
 COMMENT ON FUNCTION public.zradar_at(real, real, real) IS 'Apperent temperature from Australian Bureau of Met.';
 
 
-CREATE OR REPLACE FUNCTION config.update_legend_variable()
-  RETURNS trigger AS
-$BODY$
-BEGIN
-UPDATE config.webgis_ol_layers SET default_legend_variable = 'layer' || NEW.layer_idx WHERE NEW.layer_idx=layer_idx;
-RETURN NULL;
-END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION config.update_legend_variable() OWNER TO postgres;
-
-CREATE TRIGGER trigger_update_legend_variable
-  AFTER INSERT
-  ON config.webgis_ol_layers
-  FOR EACH ROW
-  EXECUTE PROCEDURE config.update_legend_variable();
-
-
 COMMIT;
