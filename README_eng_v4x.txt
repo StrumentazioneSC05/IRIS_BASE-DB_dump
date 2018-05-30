@@ -449,6 +449,7 @@ createlang plpgsql postgis_template
 --To install the extensions you can access to psql console and then launch:
 CREATE EXTENSION postgis;
 CREATE EXTENSION postgis_topology;
+CREATE EXTENSION pgcrypto; //to use encryption of password --see section "CONFIGURE HTTP.CONF TO MANAGE DIFFERENT WEB USERS - via POSTGRESQL DB" 
 
 --or you can achieve the same results from shell:
 cd /usr/pgsql-9.3/share/contrib/postgis-2.1/
@@ -464,6 +465,7 @@ Enter the psql console:
 CREATE ROLE radar_rw NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
 CREATE ROLE webgis_r NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
 CREATE ROLE idro_rw NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+CREATE ROLE apache_rw NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
 
 CREATE ROLE idro LOGIN ENCRYPTED PASSWORD 'XXXX' SUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
 GRANT idro_rw TO idro;
@@ -474,6 +476,8 @@ GRANT webgis_r TO radar;
 CREATE ROLE webgis LOGIN ENCRYPTED PASSWORD 'webgis$2013%' NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
 --if you change the "webgis" user's password you need to update the connection scripts to DB accordingly: best to leave the default password
 GRANT webgis_r TO webgis;
+CREATE ROLE apache LOGIN ENCRYPTED PASSWORD 'aPach3_2018' NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+GRANT apache_rw TO apache;
 
 
 ##############################################
@@ -609,8 +613,8 @@ Check for Tinyows connection to data:
 
 
 ##############################################
-CONFIGURE HTTP.CONF TO MANAGE DIFFERENT WEB USERS
-In order to protect the web content it's possible to setup users for specific path.
+CONFIGURE HTTP.CONF TO MANAGE DIFFERENT WEB USERS - via FILESYSTEM
+In order to protect the web content it's possible to setup users for accessing specific path.
 
 First create the users, storing their credentials in the files ".htpasswd" and ".htgroups".
 For example to create the user "iris_user" with password "Ir1$" digit:
@@ -651,6 +655,83 @@ Setup a path that any users (provided with login and password) could have access
 	Require valid-user #in this case it's enough that the user is present in the .htpasswd file
 </Directory>
 
+
+##############################################
+CONFIGURE HTTP.CONF TO MANAGE DIFFERENT WEB USERS - via POSTGRESQL DB
+In order to protect the web content it's possible to setup users for accessing specific path.
+
+It could be more powerful store groups and users on a PostgreSQL DB rather than manage it with ".htpasswd" and ".htgroups" files.
+
+First thing, check and install the dbd module:
+
+  yum install apr-util-pgsql.x86_64
+
+Then edit the conf file:
+
+  vi /etc/httpd/conf.d/dbd_pgsql.conf
+
+The content is similar to the one see in the previous section, but the header should look like:
+
+ # mod_dbd configuration
+ DBDriver pgsql
+ DBDParams "host=localhost port=5432 dbname=iris_base user=apache password=aPach3_2018"
+ 
+ DBDPersist on
+ DBDMin  4
+ DBDKeep 8
+ DBDMax  20
+ DBDExptime 30
+
+
+and the content, for example:
+
+ <Directory /var/www/html/iris_base/>
+   AuthType basic
+   AuthName "Area privata"
+   AuthBasicProvider dbd
+   Require valid-user
+   AuthDBDUserPWQuery "SELECT password FROM config.v_httpd_usergroup WHERE username = %s AND active = 1 AND groupname IN ('testNOgroup', 'testgroupB') LIMIT 1"
+  </Directory>
+
+  <Directory /var/www/cgi-bin/>
+    AuthType basic
+    AuthName "Area privata"
+    AuthBasicProvider dbd
+    Require valid-user
+    AuthDBDUserPWQuery "SELECT password FROM config.httpd_users WHERE username = %s AND active = 1"
+  </Directory>
+
+
+Finally, check that in the file "/etc/httpd/conf/httpd.conf" is not duplicate the "Directory" permission access and that there is a call to:
+
+  Include conf.d/*.conf
+
+
+To store users and passwords on the DB best way seem to be the MD5 encription but it's not possible to create it directly from the postgresql DB.
+Anyway to create MD5 password use openssl. For example:
+
+  openssl passwd -apr1 <password>
+
+SHA1 encryption could be directly used with Db instructions:
+
+  INSERT INTO config.httpd_users (username, password) VALUES( '<username>', '{SHA}'||encode(digest('<password>','sha1'),'base64') );
+
+or by shell:
+
+  htpasswd -bns <username> <password>
+
+
+At the end of all restart the httpd service:
+
+  service httpd restart
+
+
+
+For more options and/or documentation:
+
+  https://httpd.apache.org/docs/2.4/mod/mod_authn_dbd.html
+  https://httpd.apache.org/docs/2.4/misc/password_encryptions.html
+  https://httpd.apache.org/docs/trunk/mod/mod_authz_dbd.html
 
 
 ##############################################

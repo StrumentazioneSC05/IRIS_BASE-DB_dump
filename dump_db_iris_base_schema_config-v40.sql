@@ -259,13 +259,50 @@ COMMENT ON TABLE config.httpd_access IS 'elenco accesso utenti al servizio IRIS 
 
 
 --
+-- Name: httpd_groups; Type: TABLE; Schema: config; Owner: apache_rw; Tablespace: 
+--
+
+CREATE TABLE config.httpd_groups (
+    groupname character varying(25) NOT NULL,
+    descrizione character varying(120)
+);
+
+
+ALTER TABLE config.httpd_groups OWNER TO apache_rw;
+
+--
+-- Name: TABLE httpd_groups; Type: COMMENT; Schema: config; Owner: apache_rw
+--
+
+COMMENT ON TABLE config.httpd_groups IS 'elenco gruppi per connessione al servizio IRIS con httpd';
+
+
+--
+-- Name: httpd_usergroup; Type: TABLE; Schema: config; Owner: apache_rw; Tablespace: 
+--
+
+CREATE TABLE config.httpd_usergroup (
+    groupname character varying(25) NOT NULL,
+    username character varying(25) NOT NULL
+);
+
+
+ALTER TABLE config.httpd_usergroup OWNER TO apache_rw;
+
+--
+-- Name: TABLE httpd_usergroup; Type: COMMENT; Schema: config; Owner: apache_rw
+--
+
+COMMENT ON TABLE config.httpd_usergroup IS 'associazione utenti al gruppo per connessione al servizio IRIS con httpd';
+
+
+--
 -- Name: httpd_users; Type: TABLE; Schema: config; Owner: apache_rw; Tablespace: 
 --
 
 CREATE TABLE config.httpd_users (
     username character varying(25) NOT NULL,
     password character varying(40),
-    groups character varying(25),
     active smallint DEFAULT 1
 );
 
@@ -357,6 +394,31 @@ ALTER TABLE config.tab_tipo_evento OWNER TO postgres;
 --
 
 COMMENT ON TABLE config.tab_tipo_evento IS 'Tabella dei tipi evento';
+
+
+--
+-- Name: v_httpd_usergroup; Type: VIEW; Schema: config; Owner: postgres
+--
+
+CREATE VIEW config.v_httpd_usergroup AS
+ SELECT httpd_users.username,
+    httpd_users.password,
+    httpd_users.active,
+    httpd_groups.groupname,
+    httpd_groups.descrizione
+   FROM config.httpd_groups,
+    config.httpd_usergroup,
+    config.httpd_users
+  WHERE (((httpd_usergroup.groupname)::text = (httpd_groups.groupname)::text) AND ((httpd_users.username)::text = (httpd_usergroup.username)::text));
+
+
+ALTER TABLE config.v_httpd_usergroup OWNER TO postgres;
+
+--
+-- Name: VIEW v_httpd_usergroup; Type: COMMENT; Schema: config; Owner: postgres
+--
+
+COMMENT ON VIEW config.v_httpd_usergroup IS 'vista che raccoglie utenti password e gruppi per connessione al servizio IRIS con httpd';
 
 
 --
@@ -1431,12 +1493,36 @@ COPY config.anomalie_sistemi (id_sistema, descrizione, data_agg, autore_agg) FRO
 
 
 --
+-- Data for Name: httpd_groups; Type: TABLE DATA; Schema: config; Owner: apache_rw
+--
+
+COPY config.httpd_groups (groupname, descrizione) FROM stdin;
+testgroup	\N
+testNOgroup	\N
+testgroupB	\N
+\.
+
+
+--
+-- Data for Name: httpd_usergroup; Type: TABLE DATA; Schema: config; Owner: apache_rw
+--
+
+COPY config.httpd_usergroup (groupname, username) FROM stdin;
+testgroup	iris_base
+testNOgroup	test_XX
+testgroupB	iris_base
+testgroupB	test_BB
+\.
+
+
+--
 -- Data for Name: httpd_users; Type: TABLE DATA; Schema: config; Owner: apache_rw
 --
 
-COPY config.httpd_users (username, password, groups, active) FROM stdin;
-iris_base	{SHA}qUqP5cyxm6YcTAhz05Hph5gvu9M=	testgroup	1
-test_XX	{SHA}qUqP5cyxm6YcTAhz05Hph5gvu9M=	testNOgroup	1
+COPY config.httpd_users (username, password, active) FROM stdin;
+iris_base	{SHA}qUqP5cyxm6YcTAhz05Hph5gvu9M=	1
+test_XX	{SHA}qUqP5cyxm6YcTAhz05Hph5gvu9M=	1
+test_BB	{SHA}qUqP5cyxm6YcTAhz05Hph5gvu9M=	1
 \.
 
 
@@ -1745,6 +1831,22 @@ ALTER TABLE ONLY config.httpd_users
 
 
 --
+-- Name: httpd_groups_pkey; Type: CONSTRAINT; Schema: config; Owner: apache_rw; Tablespace: 
+--
+
+ALTER TABLE ONLY config.httpd_groups
+    ADD CONSTRAINT httpd_groups_pkey PRIMARY KEY (groupname);
+
+
+--
+-- Name: httpd_usergroups_pkey; Type: CONSTRAINT; Schema: config; Owner: apache_rw; Tablespace: 
+--
+
+ALTER TABLE ONLY config.httpd_usergroup
+    ADD CONSTRAINT httpd_usergroups_pkey PRIMARY KEY (groupname, username);
+
+
+--
 -- Name: id_tipo_evento; Type: CONSTRAINT; Schema: config; Owner: postgres; Tablespace: 
 --
 
@@ -1940,6 +2042,22 @@ ALTER TABLE ONLY config.httpd_access
 
 
 --
+-- Name: httpd_usergroup_groupname_fkey; Type: FK CONSTRAINT; Schema: config; Owner: apache_rw
+--
+
+ALTER TABLE ONLY config.httpd_usergroup
+    ADD CONSTRAINT httpd_usergroup_groupname_fkey FOREIGN KEY (groupname) REFERENCES config.httpd_groups(groupname);
+
+
+--
+-- Name: httpd_usergroup_username_fkey; Type: FK CONSTRAINT; Schema: config; Owner: apache_rw
+--
+
+ALTER TABLE ONLY config.httpd_usergroup
+    ADD CONSTRAINT httpd_usergroup_username_fkey FOREIGN KEY (username) REFERENCES config.httpd_users(username);
+
+
+--
 -- Name: webgis_groups_group_father_fkey; Type: FK CONSTRAINT; Schema: config; Owner: postgres
 --
 
@@ -2075,6 +2193,26 @@ GRANT ALL ON TABLE config.httpd_access TO webgis_r;
 
 
 --
+-- Name: TABLE httpd_groups; Type: ACL; Schema: config; Owner: apache_rw
+--
+
+REVOKE ALL ON TABLE config.httpd_groups FROM PUBLIC;
+REVOKE ALL ON TABLE config.httpd_groups FROM apache_rw;
+GRANT ALL ON TABLE config.httpd_groups TO apache_rw;
+GRANT ALL ON TABLE config.httpd_groups TO radar_rw;
+
+
+--
+-- Name: TABLE httpd_usergroup; Type: ACL; Schema: config; Owner: apache_rw
+--
+
+REVOKE ALL ON TABLE config.httpd_usergroup FROM PUBLIC;
+REVOKE ALL ON TABLE config.httpd_usergroup FROM apache_rw;
+GRANT ALL ON TABLE config.httpd_usergroup TO apache_rw;
+GRANT ALL ON TABLE config.httpd_usergroup TO radar_rw;
+
+
+--
 -- Name: TABLE httpd_users; Type: ACL; Schema: config; Owner: apache_rw
 --
 
@@ -2104,6 +2242,17 @@ REVOKE ALL ON TABLE config.tab_tipo_evento FROM postgres;
 GRANT ALL ON TABLE config.tab_tipo_evento TO postgres;
 GRANT SELECT ON TABLE config.tab_tipo_evento TO webgis_r;
 GRANT ALL ON TABLE config.tab_tipo_evento TO radar_rw;
+
+
+--
+-- Name: TABLE v_httpd_usergroup; Type: ACL; Schema: config; Owner: postgres
+--
+
+REVOKE ALL ON TABLE config.v_httpd_usergroup FROM PUBLIC;
+REVOKE ALL ON TABLE config.v_httpd_usergroup FROM postgres;
+GRANT ALL ON TABLE config.v_httpd_usergroup TO postgres;
+GRANT ALL ON TABLE config.v_httpd_usergroup TO apache_rw;
+GRANT ALL ON TABLE config.v_httpd_usergroup TO radar_rw;
 
 
 --
